@@ -7,36 +7,59 @@ from schemas.user import User as UserSchema
 from typing import List
 from fastapi import status, HTTPException
 from sqlalchemy.exc import NoResultFound,IntegrityError
+from utility import get_password_hash, verify_password
 
 
 async def get_all_user() -> List[UserSchema]:
     with Session(engine) as session:
         statement = select(UserModel)
-        results = session.exec(statement)
-        return results.all()
+        users = session.exec(statement).all()
+        _users = [UserSchema(**user.dict()) for user in users]
+        return _users
 
 
 async def get_user_by_id(user_id: int) -> UserSchema:
     with Session(engine) as session:
         statement = select(UserModel).where(UserModel.id == user_id)
         try:
-            result = session.exec(statement).one()
-            return result
+            user = session.exec(statement).one()
+            return UserSchema(**user.dict())
         except NoResultFound:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=errors.USER_ID_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=errors.USER_NOT_FOUND)
 
 
-async def create_user(user: UserModel) -> UserSchema:
+async def is_username_available(username: str) -> bool:
     with Session(engine) as session:
+        statement = select(UserModel).where(UserModel.username == username)
+        _usernames = session.exec(statement).all()
+        if _usernames:
+            return False
+        return True
+
+
+async def create_user(user: UserModel) -> UserModel:
+    with Session(engine) as session:
+        existing_user: bool = await is_username_available(user.username)
+        if existing_user:
+            user.password = get_password_hash(user.password)
+            try:
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+                return user
+            except IntegrityError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors.INVALID_REQUEST_BODY)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors.USER_ALREADY_EXISTS)
+
+
+async def login_user(email: str, password: str) -> UserModel:
+    with Session(engine) as session:
+        statement = select(UserModel).where(UserModel.email == email)
         try:
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-            return UserSchema(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                is_active=user.is_active
-            )
-        except IntegrityError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors.INVALID_REQUEST_BODY)
+            user = session.exec(statement).one()
+            if verify_password(password, user.password):
+                return user
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=errors.INVALID_CREDENTIALS)
+        except NoResultFound:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=errors.USER_NOT_FOUND)

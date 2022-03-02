@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from typing import List
 
 from operations import user_operation
-from schemas.user import User
+from schemas.user import LoginSchema, User, UserStatusSchema
 from models.user import User as UserModel
 
 router = APIRouter(
@@ -18,8 +18,8 @@ async def get_users():
 
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserModel) -> User:
-    _user: User = await user_operation.create_user(user)
+async def create_user(user: UserModel) -> UserModel:
+    _user: UserModel = await user_operation.create_user(user)
     return _user
 
 
@@ -29,3 +29,13 @@ async def get_user_by_id(user_id: int):
     return _user
 
 
+@router.post('/login', response_model=User, status_code=status.HTTP_200_OK)
+async def login(user: LoginSchema) -> UserModel:
+    _user: UserModel = await user_operation.login_user(user.email, user.password)
+    return _user
+
+
+@router.get("/check_username/{username}", response_model=UserStatusSchema)
+async def check_username(username: str):
+    _status: bool = await user_operation.is_username_available(username)
+    return {"username": username, "available": _status}

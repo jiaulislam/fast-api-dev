@@ -25,28 +25,6 @@ from models.user import User
 #
 
 
-def create_users():
-    user_1 = User(id=1, name="Jibon", email="jiaulislam.ict.bd@gmail.com")
-    user_2 = User(id=2, name="Jamil", email="jamil.ict.bd@gmail.com")
-    user_3 = User(id=3, name="Jhonny", email="jhonny.ict.bd@gmail.com")
-
-    print(user_1)
-    print(user_2)
-    print(user_3)
-
-    with Session(engine) as session:
-        session.add(user_1)
-        session.add(user_2)
-        session.add(user_3)
-
-        session.commit()
-
-        print("After Commiting")
-        print(user_1)
-        print(user_2)
-        print(user_3)
-
-
 def create_db_and_tables():
     SQLModel.metadata.create_all(bind=engine)
 

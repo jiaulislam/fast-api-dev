@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
+fastapi = "==0.74.1"
 uvicorn = {extras = ["standard"], version = "*"}
 cx-oracle = "*"
 sqlalchemy = "*"
 sqlmodel = "*"
+python-jose = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
 
 [dev-packages]
 black = "*"
