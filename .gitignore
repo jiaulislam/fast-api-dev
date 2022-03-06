@@ -500,4 +500,4 @@
 *\.a.dll.so.1.0
 *\.a.dll.so.1.0.0
 *\.a.dll.so.
-.idea
+*\__pycache__\*

@@ -3,7 +3,7 @@ from typing import List
 
 from operations import user_operation
 from schemas.user import User, UserStatusSchema
-from models.user import Users as UserModel
+from models import Users as UserModel
 
 router = APIRouter(
     prefix="/users",

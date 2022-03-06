@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from models.proposal import Proposal
+from models import Proposal
 
 
 class User(BaseModel):

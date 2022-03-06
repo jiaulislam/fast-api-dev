@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 from database import engine
-from models.user import Users as UserModel
+from models import Users as UserModel
 from schemas.user import LoginSchema, User
 from utility import verify_password
 from sqlalchemy.exc import NoResultFound

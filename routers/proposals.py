@@ -5,9 +5,9 @@ from sqlalchemy.exc import NoResultFound, IntegrityError
 from typing import List
 import errors
 
-from models.proposal import Proposal
-from models.user import Users
-from schemas.user import User, UserOut, UserProposalSchemaOut
+from models import Proposal
+from models import Users
+
 
 
 router = APIRouter(
@@ -53,7 +53,7 @@ async def create_proposal(proposal: Proposal):
             )
 
 
-@router.get("/user/{user_id}", response_model=List[UserProposalSchemaOut])
+@router.get("/user/{user_id}", response_model=List[Proposal])
 async def get_proposals_by_user(user_id: int):
     with Session(engine) as session:
         statement = select(Proposal).where(Proposal.user_id == user_id)
@@ -62,7 +62,4 @@ async def get_proposals_by_user(user_id: int):
         print(user)
         proposals = session.exec(statement).all()
         _proposals = [Proposal(**proposal.dict()) for proposal in proposals]
-        dd = []
-        for i in _proposals:
-            dd.append(UserProposalSchemaOut(proposal=Proposal(**i.dict()), user=UserOut(**user.dict())))
-        return dd
+        return _proposals

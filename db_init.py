@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Session
 from database import engine
-from models.user import Users
-from models.proposal import Proposal
+from models import Users
+from models import Proposal
 
 
 def create_db_and_tables():

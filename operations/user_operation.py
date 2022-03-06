@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 
 import errors
 from database import engine
-from models.user import Users as UserModel
+from models import Users as UserModel
 from schemas.user import User as UserSchema
 from typing import List
 from fastapi import status, HTTPException
