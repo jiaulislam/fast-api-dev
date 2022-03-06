@@ -2,12 +2,12 @@ from sqlmodel import Session, select
 
 import errors
 from database import engine
-from models.user import User as UserModel
+from models.user import Users as UserModel
 from schemas.user import User as UserSchema
 from typing import List
 from fastapi import status, HTTPException
-from sqlalchemy.exc import NoResultFound,IntegrityError
-from utility import get_password_hash, verify_password
+from sqlalchemy.exc import NoResultFound, IntegrityError
+from utility import get_password_hash
 
 
 async def get_all_user() -> List[UserSchema]:
@@ -25,7 +25,9 @@ async def get_user_by_id(user_id: int) -> UserSchema:
             user = session.exec(statement).one()
             return UserSchema(**user.dict())
         except NoResultFound:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=errors.USER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=errors.USER_NOT_FOUND
+            )
 
 
 async def is_username_available(username: str) -> bool:
@@ -48,18 +50,10 @@ async def create_user(user: UserModel) -> UserModel:
                 session.refresh(user)
                 return user
             except IntegrityError:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors.INVALID_REQUEST_BODY)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors.USER_ALREADY_EXISTS)
-
-
-async def login_user(email: str, password: str) -> UserModel:
-    with Session(engine) as session:
-        statement = select(UserModel).where(UserModel.email == email)
-        try:
-            user = session.exec(statement).one()
-            if verify_password(password, user.password):
-                return user
-            else:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=errors.INVALID_CREDENTIALS)
-        except NoResultFound:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=errors.USER_NOT_FOUND)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=errors.INVALID_REQUEST_BODY,
+                )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=errors.USER_ALREADY_EXISTS
+        )

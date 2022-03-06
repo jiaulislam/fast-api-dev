@@ -1,7 +1,8 @@
 from typing import Optional
-from datetime import datetime
 
 from pydantic import BaseModel
+
+from models.proposal import Proposal
 
 
 class User(BaseModel):
@@ -13,12 +14,25 @@ class User(BaseModel):
     is_active: bool
     is_admin: bool
     is_agent: bool
-    # created_at: Optional[datetime]
+
 
 class LoginSchema(BaseModel):
     email: str
     password: str
 
+
 class UserStatusSchema(BaseModel):
     username: str
     available: bool
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    full_name: str
+    mobile: Optional[str]
+    email: Optional[str]
+
+
+class UserProposalSchemaOut(BaseModel):
+    proposal: Proposal
+    user: UserOut
