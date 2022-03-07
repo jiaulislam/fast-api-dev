@@ -23,7 +23,10 @@ class Users(SQLModel, table=True):
     is_admin: bool = Field(default=False, nullable=False)
     is_agent: bool = Field(default=False, nullable=False)
     is_employee: bool = Field(default=False, nullable=False)
-    proposals: List["Proposal"] = Relationship(back_populates="users")
+    emp_code: Optional[str] = Field(nullable=True, max_length=10)
+    agent_code: Optional[str] = Field(nullable=True, max_length=21)
+
+    proposals: List["Proposal"] = Relationship(back_populates="user")
     created_at: Optional[datetime]
 
     def __repr__(self):
@@ -184,7 +187,7 @@ class Proposal(SQLModel, table=True):
     o_adb: Optional[float] = Field(nullable=True, default=None)
     o_hi: Optional[int] = Field(nullable=True, default=None)
 
-    users: "Users" = Relationship(back_populates="proposals")
+    user: "Users" = Relationship(back_populates="proposals")
     nominees: List["ProposerNominee"] = Relationship(back_populates="proposal")
     attachments: List["ProposerAttachments"] = Relationship(back_populates="proposal")
     created_at: Optional[datetime]
@@ -192,11 +195,20 @@ class Proposal(SQLModel, table=True):
     def __repr__(self):
         return f"<Proposal id({self.id}) user_id({self.user_id}) proposal_no({self.propno})"
 
+class NomineeAttachment(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nominee_id: int = Field(nullable=False, foreign_key="proposernominee.id")
+    nominee_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee_signature: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee: "ProposerNominee" = Relationship(back_populates="nominee_attachments")
+
 
 class ProposerNominee(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: Optional[int] = Field(nullable=False, foreign_key="proposal.id")
-    attachment_id: Optional[int] = Field(nullable=False, foreign_key="nomineeattachemnt.id")
+    attachment_id: Optional[int] = Field(nullable=False, foreign_key="nomineeattachment.id")
     nomname: str = Field(nullable=False, min_length=3, max_length=30)
     nomrel: int = Field(nullable=False, le=1, ge=30)
     nfhname: str = Field(nullable=False, min_length=3, max_length=30)
@@ -242,11 +254,3 @@ class ProposerAttachments(SQLModel, table=True):
     proposal: "Proposal" = Relationship(back_populates="attachments")
 
 
-class NomineeAttachment(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    nominee_id: int = Field(nullable=False, foreign_key="proposer_nominee.id")
-    nominee_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_signature: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee: "ProposerNominee" = Relationship(back_populates="nominee_attachments")

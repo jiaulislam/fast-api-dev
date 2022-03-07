@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, Session
 from database import engine
-from models import Users
-from models import Proposal
+from models import Users, Proposal, ProposerAttachments, ProposerNominee, NomineeAttachment
 
 
 def create_db_and_tables():
