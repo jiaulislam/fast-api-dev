@@ -17,7 +17,7 @@ class User(BaseModel):
 
 
 class LoginSchema(BaseModel):
-    email: str
+    username: str
     password: str
 
 
@@ -36,3 +36,10 @@ class UserOut(BaseModel):
 class UserProposalSchemaOut(BaseModel):
     proposal: Proposal
     user: UserOut
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

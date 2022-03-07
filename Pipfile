@@ -9,8 +9,10 @@ uvicorn = {extras = ["standard"], version = "*"}
 cx-oracle = "*"
 sqlalchemy = "*"
 sqlmodel = "*"
-python-jose = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
 passlib = {extras = ["bcrypt"], version = "*"}
+python-multipart = "*"
+pydantic = {extras = ["email"], version = "*"}
 
 [dev-packages]
 black = "*"

@@ -7,7 +7,7 @@ from models import Users as UserModel
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
+    tags=["Users"],
 )
 
 
