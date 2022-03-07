@@ -1,4 +1,3 @@
-from sqlalchemy import null
 from sqlmodel import Relationship, SQLModel, Field
 from typing import Optional
 from datetime import datetime
@@ -48,8 +47,14 @@ class Proposal(SQLModel, table=True):
     maddr2: str = Field(nullable=False, max_length=50)
     maddr3: str = Field(nullable=False, max_length=50)
     maddr4: str = Field(nullable=False, max_length=50)
-    mobile: str = Field(nullable=False, max_length=11, regex="^017|016|013|018|019|[0-9]{8}$")
-    email: Optional[str] = Field(nullable=True, max_length=50, regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    mobile: str = Field(
+        nullable=False, max_length=11, regex="^017|016|013|018|019|[0-9]{8}$"
+    )
+    email: Optional[str] = Field(
+        nullable=True,
+        max_length=50,
+        regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+    )
     telhome: Optional[str] = Field(nullable=True, max_length=11)
     teloffice: Optional[str] = Field(nullable=True, max_length=11)
     nid: str = Field(nullable=False, max_length=17)
@@ -118,7 +123,7 @@ class Proposal(SQLModel, table=True):
     cosfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
     lilfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
     dyfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    
+
     nummh: Optional[int] = Field(nullable=True, default=None)
     agemh: Optional[int] = Field(nullable=True, default=None)
     premh: Optional[str] = Field(nullable=True, default=None, max_length=20)
@@ -151,7 +156,6 @@ class Proposal(SQLModel, table=True):
     lilsp: Optional[str] = Field(nullable=True, default=None, max_length=20)
     dysp: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-
     numson: Optional[int] = Field(nullable=True, default=None)
     ageson: Optional[int] = Field(nullable=True, default=None)
     preson: Optional[str] = Field(nullable=True, default=None, max_length=20)
@@ -180,17 +184,19 @@ class Proposal(SQLModel, table=True):
     o_adb: Optional[float] = Field(nullable=True, default=None)
     o_hi: Optional[int] = Field(nullable=True, default=None)
 
-
     users: "Users" = Relationship(back_populates="proposals")
+    nominees: List["ProposerNominee"] = Relationship(back_populates="proposal")
+    attachments: List["ProposerAttachments"] = Relationship(back_populates="proposal")
     created_at: Optional[datetime]
 
     def __repr__(self):
         return f"<Proposal id({self.id}) user_id({self.user_id}) proposal_no({self.propno})"
 
+
 class ProposerNominee(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    proposal_id: Optional[int] = Field(nullable=True, default=None)
-    proposal_no: str = Field(nullable=False, min_length=13, max_length=20)
+    proposal_id: Optional[int] = Field(nullable=False, foreign_key="proposal.id")
+    attachment_id: Optional[int] = Field(nullable=False, foreign_key="nomineeattachemnt.id")
     nomname: str = Field(nullable=False, min_length=3, max_length=30)
     nomrel: int = Field(nullable=False, le=1, ge=30)
     nfhname: str = Field(nullable=False, min_length=3, max_length=30)
@@ -200,8 +206,18 @@ class ProposerNominee(SQLModel, table=True):
     ndob: date = Field(nullable=False)
     nage: int = Field(nullable=False, le=150, ge=1)
     nsex: str = Field(nullable=False, min_length=1, max_length=1)
-    nmobile: str = Field(nullable=False, min_length=11, max_length=11, regex="^017|016|013|018|019|[0-9]{8}$")
-    nemail: Optional[str] = Field(nullable=True, min_length=3, max_length=30, regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    nmobile: str = Field(
+        nullable=False,
+        min_length=11,
+        max_length=11,
+        regex="^017|016|013|018|019|[0-9]{8}$",
+    )
+    nemail: Optional[str] = Field(
+        nullable=True,
+        min_length=3,
+        max_length=30,
+        regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+    )
     noccup: str = Field(nullable=False, min_length=3, max_length=30)
     presentaddr: str = Field(nullable=False, min_length=3, max_length=80)
     nompurmaddr: str = Field(nullable=False, min_length=3, max_length=80)
@@ -209,21 +225,28 @@ class ProposerNominee(SQLModel, table=True):
     parenname: Optional[str] = Field(nullable=True, min_length=3, max_length=30)
     chnomage: Optional[int] = Field(nullable=True, le=1, ge=100)
     chnomrel: Optional[int] = Field(nullable=True, le=1, ge=30)
+    proposal: "Proposal" = Relationship(back_populates="nominees")
+    nominee_attachments: List["NomineeAttachment"] = Relationship(back_populates="nominee")
 
 
 
 class ProposerAttachments(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     proposal_id: int = Field(nullable=False, foreign_key="proposal.id")
-    proposer_img : Optional[str] = Field(nullable=True, default=None, max_length=65)
+    proposer_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
     proposer_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
     proposer_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    proposer_signature: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    proposer_signature: Optional[str] = Field(
+        nullable=True, default=None, max_length=65
+    )
+    proposal: "Proposal" = Relationship(back_populates="attachments")
+
 
 class NomineeAttachment(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    nominee_id: int = Field(nullable=False, default=None)
-    nominee_img : Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee_id: int = Field(nullable=False, foreign_key="proposer_nominee.id")
+    nominee_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
     nominee_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
     nominee_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
     nominee_signature: Optional[str] = Field(nullable=True, default=None, max_length=65)
+    nominee: "ProposerNominee" = Relationship(back_populates="nominee_attachments")
