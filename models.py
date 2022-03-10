@@ -1,256 +1,326 @@
-from sqlmodel import Relationship, SQLModel, Field
-from typing import Optional
-from datetime import datetime
-from typing import List
-from datetime import date
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Identity, func, Enum
+from sqlalchemy.dialects.oracle import DATE, CHAR, NUMBER, VARCHAR2
+from sqlalchemy.orm import relationship
+import enum
+from validators import Validator
+
+from database import Base
+
+class StatusChoices(enum.Enum):
+    PENDING = 1
+    SUBMITTED = 2
+    SENT = 3
+
+#  Existing Tables
+class Education(Base): # type: ignore
+    __tablename__ = 'education'
+    __table_args__ = {'schema': 'ipl'}
+    edcode = Column(CHAR(2), nullable=False, primary_key=True)
+    edname = Column(VARCHAR2(20), nullable=False)
+
+class PayMode(Base): # type: ignore
+    __tablename__ = 'paymode'
+    __table_args__ = {'schema' : 'ipl'}
+    pmode = Column(VARCHAR2(2), nullable=False, primary_key=True)
+    modename = Column(VARCHAR2(25), nullable=False)
+
+class Plan: # type: ignore
+    __tablename__ = 'plan'
+    __table_args__ = {'schema' : 'ipl'}
+    plan = Column(VARCHAR2(4), nullable=False, primary_key=True)
+    planname = Column(VARCHAR2(50), nullable=False)
+    policy_type = Column(VARCHAR2(1), nullable=False)
+    new_plan = Column(VARCHAR2(4), nullable=True)
+    plan_type = Column(VARCHAR2(1), nullable=True)
+    bonus = Column(VARCHAR2(1), nullable=True)
+    business_type = Column(VARCHAR2(1), nullable=True)
+    plan_type_name = Column(VARCHAR2(60), nullable=True)
+    min_age = Column(NUMBER(5), nullable=False)
+    max_age = Column(NUMBER(5), nullable=False)
+    name = Column(VARCHAR2(200), nullable=True)
+    prod_code = Column(VARCHAR2(20), nullable=True)
+    plan_status = Column(VARCHAR2(1), nullable=True)
+    status_date = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
 
 
-class Users(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(
-        nullable=False, min_length=3, max_length=16, regex="^[a-zA-Z0-9_]*$"
-    )
-    full_name: str = Field(nullable=False, min_length=3, max_length=50)
-    mobile: Optional[str] = Field(
-        nullable=True,
-        min_length=11,
-        max_length=11,
-        regex="^017|016|013|018|019|[0-9]{8}$",
-    )
-    email: Optional[str] = Field(max_length=50, nullable=True)
-    password: str = Field(nullable=False, min_length=6, max_length=65)
-    is_active: bool = Field(default=True, nullable=False)
-    is_admin: bool = Field(default=False, nullable=False)
-    is_agent: bool = Field(default=False, nullable=False)
-    is_employee: bool = Field(default=False, nullable=False)
-    emp_code: Optional[str] = Field(nullable=True, max_length=10)
-    agent_code: Optional[str] = Field(nullable=True, max_length=21)
 
-    proposals: List["Proposal"] = Relationship(back_populates="user")
-    created_at: Optional[datetime]
+# New Tables
+class User(Base): # type: ignore
+    __tablename__ = "users"
+    __table_args__ = {'schema': 'jibon'}
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
+    username = Column(VARCHAR2(30), nullable=False, unique=True)
+    full_name = Column(VARCHAR2(30), nullable=False)
+    mobile = Column(VARCHAR2(30), nullable=False, unique=True)
+    email = Column(VARCHAR2(30), nullable=False, unique=True)
+    password = Column(VARCHAR2(65), nullable=False)
+    is_active = Column(NUMBER(1), default=True)
+    is_admin = Column(NUMBER(1), default=False)
+    is_agent = Column(NUMBER(1), default=False)
+    is_employee = Column(NUMBER(1), default=False)  
+    emp_code = Column(VARCHAR2(10), nullable=True) #TODO: Validation Required for Employee Code
+    agent_code = Column(VARCHAR2(12), nullable=True) # TODO: Validation Required for valid agent code
+
+    proposals = relationship('Proposal', back_populates='owner')
+
+    created_at = Column(DATE(timezone=True), nullable=False,server_default=func.sysdate())
 
     def __repr__(self):
         return f"<User id({self.id} name({self.username}))>"
 
 
-class Proposal(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(nullable=False, foreign_key="users.id")
-    propno: str = Field(max_length=30, nullable=False)
-    policy: str = Field(max_length=30, nullable=True, default=None)
-    name: str = Field(nullable=False, max_length=50)
-    fhname: str = Field(nullable=False, max_length=50)
-    mhname: str = Field(nullable=False, max_length=50)
-    spname: Optional[str] = Field(nullable=True, max_length=50, default=None)
-    paddr1: str = Field(nullable=False, max_length=50)
-    paddr2: str = Field(nullable=False, max_length=50)
-    paddr3: str = Field(nullable=False, max_length=50)
-    paddr4: str = Field(nullable=False, max_length=50)
-    maddr1: str = Field(nullable=False, max_length=50)
-    maddr2: str = Field(nullable=False, max_length=50)
-    maddr3: str = Field(nullable=False, max_length=50)
-    maddr4: str = Field(nullable=False, max_length=50)
-    mobile: str = Field(
-        nullable=False, max_length=11, regex="^017|016|013|018|019|[0-9]{8}$"
-    )
-    email: Optional[str] = Field(
-        nullable=True,
-        max_length=50,
-        regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
-    )
-    telhome: Optional[str] = Field(nullable=True, max_length=11)
-    teloffice: Optional[str] = Field(nullable=True, max_length=11)
-    nid: str = Field(nullable=False, max_length=17)
-    passport: Optional[str] = Field(nullable=True, max_length=20)
-    passexpdt: Optional[date] = Field(nullable=True, default=None)
-    birthid: Optional[str] = Field(nullable=True, max_length=21)
-    etin: Optional[str] = Field(nullable=True, default=None, max_length=21)
-    drivingid: Optional[str] = Field(nullable=True, default=None, max_length=21)
-    drivingexpdt: Optional[date] = Field(nullable=True, default=None)
-    dob: date = Field(nullable=False)
-    age: int = Field(nullable=False)
-    sex: str = Field(nullable=False, max_length=1)
-    maritial_status: str = Field(nullable=False, max_length=1)
-    edcode: str = Field(nullable=False, max_length=2)
-    occup: str = Field(nullable=False, max_length=2)
-    ur: str = Field(nullable=False, max_length=1)
-    propdat: date = Field(nullable=False, default=date.today())
-    datecom: date = Field(nullable=False, default=date.today())
-    matdate: date = Field(nullable=False)
-    jobdetails: str = Field(nullable=False, max_length=120)
-    mon_income: float = Field(nullable=False)
-    incomesource: str = Field(nullable=False, max_length=50)
-    incomevalidity: str = Field(nullable=False, max_length=50)
-    spjobdetails: Optional[str] = Field(nullable=True, max_length=120)
-    spmonincome: Optional[float] = Field(nullable=True, default=None)
-    sscpf: bool = Field(default=True, nullable=False)
-    dobplace: Optional[str] = Field(default=None, nullable=True, max_length=30)
-    polopt: str = Field(nullable=False, max_length=1)
-    planname: str = Field(nullable=False, max_length=50)
-    plan: str = Field(nullable=False, max_length=4)
-    term: str = Field(nullable=False, min_length=1, max_length=2)
 
-    sumass: float = Field(nullable=False)
-    sumatrisk: float = Field(nullable=False)
-    apu: Optional[float] = Field(nullable=True, default=None)
-    adb: Optional[float] = Field(nullable=True, default=None)
-    padb: Optional[float] = Field(nullable=True, default=None)
-    apc: Optional[float] = Field(nullable=True, default=None)
-    hi: bool = Field(default=False, nullable=False)
-    hiplan: Optional[int] = Field(default=None, nullable=True)
-    paymode: Optional[int] = Field(default=None, nullable=True)
-    lprem: Optional[float] = Field(default=None, nullable=True)
-    totprem: float = Field(nullable=False)
+class Proposal(Base): # type: ignore
+    __tablename__ = "proposals"
+    __table_args__ = {'schema': 'jibon'}
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
+    owner_id = Column(ForeignKey("jibon.users.id"), nullable=False)
+    propno = Column(VARCHAR2(30), nullable=False, unique=True)
 
-    exinfo: bool = Field(default=False, nullable=False)
-    comok: bool = Field(default=True, nullable=False)
-    illness: bool = Field(default=False, nullable=False)
-    optacc: bool = Field(default=False, nullable=False)
-    hfit: int = Field(default=0, nullable=False)
-    hinchs: int = Field(default=0, nullable=False)
-    weight: float = Field(nullable=False)
-    inbrith: float = Field(nullable=False)
-    outbrith: float = Field(nullable=False)
-    stom: float = Field(nullable=False)
-    spmark: Optional[str] = Field(nullable=True, default=None, max_length=50)
-    pregn: bool = Field(default=False, nullable=False)
-    normdel: Optional[bool] = Field(default=None, nullable=True)
-    lc_dob: Optional[date] = Field(nullable=True, default=None)
-    brescan: Optional[bool] = Field(nullable=True, default=None)
-    lc_minst: Optional[date] = Field(nullable=True, default=None)
+    owner = relationship('User', back_populates='proposals')
+    owner_attachments = relationship('ProposerAttachments', back_populates='proposer')
+    policy = Column(VARCHAR2(12), nullable=True, default=None)
+    name = Column(VARCHAR2(50), nullable=False)
+    fhname = Column(VARCHAR2(50), nullable=False)
+    mhname = Column(VARCHAR2(50), nullable=False)
+    spname = Column(VARCHAR2(50), nullable=True, default=None)
+    paddr1 = Column(VARCHAR2(50), nullable=False)
+    paddr2 = Column(VARCHAR2(50), nullable=False)
+    paddr3 = Column(VARCHAR2(50), nullable=False)
+    paddr4 = Column(VARCHAR2(50), nullable=False)
+    maddr1 = Column(VARCHAR2(50), nullable=False)
+    maddr2 = Column(VARCHAR2(50), nullable=False)
+    maddr3 = Column(VARCHAR2(50), nullable=False)
+    maddr4 = Column(VARCHAR2(50), nullable=False)
+    mobile = Column(VARCHAR2(11), nullable=False)
+    email = Column(VARCHAR2(50), nullable=True, default=None)
+    telhome = Column(VARCHAR2(50), nullable=True, default=None)
+    teloffice = Column(VARCHAR2(50), nullable=True, default=None)
+    nid = Column(VARCHAR2(17), nullable=False)
+    passport = Column(VARCHAR2(20), nullable=True, default=None)
+    passexpdt = Column(DATE(timezone=False), nullable=True, default=None)
+    birthid = Column(DATE(timezone=False), nullable=True, default=None)
+    birthid = Column(VARCHAR2(20), nullable=True, default=None)
+    etin = Column(VARCHAR2(20), nullable=True, default=None)
+    drivingid = Column(VARCHAR2(20), nullable=True, default=None)
+    drivingexpdt = Column(VARCHAR2(20), nullable=True, default=None)
+    dob = Column(DATE(timezone=False), nullable=False)
+    age = Column(NUMBER(10), nullable=False)
+    sex = Column(VARCHAR2(1), nullable=False)
+    maritial_status = Column(VARCHAR2(1), nullable=False)
+    # edcode = Column(String(2), nullable=False)
+    edcode = Column(CHAR(2), ForeignKey('ipl.education.edcode'))
+    occup = Column(VARCHAR2(2), nullable=False)     # TODO : Validation Required for Occupation
+    ur = Column(VARCHAR2(1), nullable=False)
+    propdat = Column(DATE(timezone=False), nullable=False)
+    comdat = Column(DATE(timezone=False), nullable=False)
+    matdate = Column(DATE(timezone=False), nullable=False)
+    jobdetails = Column(VARCHAR2(50), nullable=False)
+    mon_income = Column(NUMBER(30,2), nullable=False)
+    incomesource = Column(VARCHAR2(50), nullable=False)
+    incomevalidity = Column(VARCHAR2(50), nullable=False)
+    spmonincome = Column(NUMBER(30, 2), nullable=True, default=None)
+    sscpf = Column(NUMBER(1), default=True)
+    dob_place = Column(VARCHAR2(30), nullable=False)
+    polopt = Column(VARCHAR2(1), nullable=False)
+    planname = Column(VARCHAR2(50), nullable=False)
+    # plan = Column(VARCHAR2(4), ForeignKey('ipl.plan.plan')) # TODO : Validation required for this field
+    plan = Column(VARCHAR2(4), nullable=False)
+    term = Column(VARCHAR2(2), nullable=False)
+    sumass = Column(NUMBER(30,2), nullable=False)
+    sumatrisk = Column(NUMBER(30,2), nullable=False)
+    apu = Column(NUMBER(30,2), nullable=True, default=None)
+    adb = Column(NUMBER(30,2), nullable=True, default=None)
+    padb = Column(NUMBER(30,2), nullable=True, default=None)
+    apc = Column(NUMBER(30,2), nullable=True, default=None)
+    hi = Column(NUMBER(1), nullable=False, server_default='0')
+    hiplan = Column(NUMBER(4), nullable=True)
+    # paymode = Column(VARCHAR2(2), ForeignKey('ipl.payment.pmode'))
+    paymode = Column(VARCHAR2(2), nullable=False)
+    lprem = Column(NUMBER(30,2), nullable=True, default=None)
+    totprem = Column(NUMBER(30,2), nullable=False)
 
-    numfh: Optional[int] = Field(nullable=True, default=None)
-    agefh: Optional[int] = Field(nullable=True, default=None)
-    prefh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedfh: Optional[int] = Field(nullable=True, default=None)
-    cosfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dyfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+    exinfo = Column(NUMBER(1), nullable=False, server_default='0')
+    comok = Column(NUMBER(1), nullable=False, server_default='1')
+    illness = Column(NUMBER(1), nullable=False, server_default='0')
+    optacc = Column(NUMBER(1), nullable=False, server_default='0')
+    hfit = Column(NUMBER(10), nullable=False)
+    hinchs = Column(NUMBER(10), nullable=False)
+    weight = Column(NUMBER(3, 2), nullable=False)
+    inbrith = Column(NUMBER(10), nullable=False)
+    outbrith = Column(NUMBER(10), nullable=False)
+    stom = Column(NUMBER(10), nullable=False)
+    spmark = Column(VARCHAR2(50), nullable=True, default='None')
+    pregn = Column(NUMBER(1), default=None, nullable=True)
+    normdel = Column(NUMBER(1), default=None, nullable=True)
+    lc_dob = Column(DATE(timezone=False), nullable=True, default=None)
+    brescan = Column(NUMBER(1), default=None, nullable=True)
+    lc_minst = Column(DATE(timezone=False), nullable=True, default=None)
 
-    nummh: Optional[int] = Field(nullable=True, default=None)
-    agemh: Optional[int] = Field(nullable=True, default=None)
-    premh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedmh: Optional[int] = Field(nullable=True, default=None)
-    cosmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dymh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+    inspur = Column(VARCHAR2(40), nullable=False)
+    # webproposal_no = Column(VARCHAR2(30), nullable=False, unique=True)
 
-    numbro: Optional[int] = Field(nullable=True, default=None)
-    agebro: Optional[int] = Field(nullable=True, default=None)
-    prebro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedbro: Optional[int] = Field(nullable=True, default=None)
-    cosbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dybro: Optional[str] = Field(nullable=True, default=None, max_length=20)
+    bankname = Column(VARCHAR2(50), nullable=True, default=None)
+    baaccno = Column(VARCHAR2(50), nullable=True, default=None)
+    acctype = Column(VARCHAR2(30), nullable=True, default=None)
+    baadd = Column(VARCHAR2(50), nullable=True, default=None)
+    o_basic = Column(NUMBER(30, 2), nullable=True, default=None)
+    o_pdab = Column(NUMBER(30, 2), nullable=True, default=None)
+    o_adb = Column(NUMBER(30, 2), nullable=True, default=None)
+    o_hi = Column(NUMBER(30,2), nullable=True, default=None)
+#     baaccno: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     acctype: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     babran: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     baadd: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     o_basic: Optional[float] = Field(nullable=True, default=None)
+#     o_pdab: Optional[float] = Field(nullable=True, default=None)
+#     o_adb: Optional[float] = Field(nullable=True, default=None)
+#     o_hi: Optional[int] = Field(nullable=True, default=None)
 
-    numsis: Optional[int] = Field(nullable=True, default=None)
-    agesis: Optional[int] = Field(nullable=True, default=None)
-    presis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedsis: Optional[int] = Field(nullable=True, default=None)
-    cossis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilsis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dysis: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     numfh: Optional[int] = Field(nullable=True, default=None)
+#     agefh: Optional[int] = Field(nullable=True, default=None)
+#     prefh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedfh: Optional[int] = Field(nullable=True, default=None)
+#     cosfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dyfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-    numsp: Optional[int] = Field(nullable=True, default=None)
-    agesp: Optional[int] = Field(nullable=True, default=None)
-    presp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedsp: Optional[int] = Field(nullable=True, default=None)
-    cossp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilsp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dysp: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     nummh: Optional[int] = Field(nullable=True, default=None)
+#     agemh: Optional[int] = Field(nullable=True, default=None)
+#     premh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedmh: Optional[int] = Field(nullable=True, default=None)
+#     cosmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dymh: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-    numson: Optional[int] = Field(nullable=True, default=None)
-    ageson: Optional[int] = Field(nullable=True, default=None)
-    preson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    agedson: Optional[int] = Field(nullable=True, default=None)
-    cosson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lilson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dyson: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     numbro: Optional[int] = Field(nullable=True, default=None)
+#     agebro: Optional[int] = Field(nullable=True, default=None)
+#     prebro: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedbro: Optional[int] = Field(nullable=True, default=None)
+#     cosbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dybro: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-    numdot: Optional[int] = Field(nullable=True, default=None)
-    agedot: Optional[int] = Field(nullable=True, default=None)
-    predot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    ageddot: Optional[int] = Field(nullable=True, default=None)
-    cosdot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    lildot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    dydot: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     numsis: Optional[int] = Field(nullable=True, default=None)
+#     agesis: Optional[int] = Field(nullable=True, default=None)
+#     presis: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedsis: Optional[int] = Field(nullable=True, default=None)
+#     cossis: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilsis: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dysis: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-    banname: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    baaccno: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    acctype: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    babran: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    baadd: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    inspur: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    webproposal_no: Optional[str] = Field(nullable=True, default=None, max_length=20)
-    o_basic: Optional[float] = Field(nullable=True, default=None)
-    o_pdab: Optional[float] = Field(nullable=True, default=None)
-    o_adb: Optional[float] = Field(nullable=True, default=None)
-    o_hi: Optional[int] = Field(nullable=True, default=None)
+#     numsp: Optional[int] = Field(nullable=True, default=None)
+#     agesp: Optional[int] = Field(nullable=True, default=None)
+#     presp: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedsp: Optional[int] = Field(nullable=True, default=None)
+#     cossp: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilsp: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dysp: Optional[str] = Field(nullable=True, default=None, max_length=20)
 
-    user: "Users" = Relationship(back_populates="proposals")
-    nominees: List["ProposerNominee"] = Relationship(back_populates="proposal")
-    attachments: List["ProposerAttachments"] = Relationship(back_populates="proposal")
-    created_at: Optional[datetime]
+#     numson: Optional[int] = Field(nullable=True, default=None)
+#     ageson: Optional[int] = Field(nullable=True, default=None)
+#     preson: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     agedson: Optional[int] = Field(nullable=True, default=None)
+#     cosson: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lilson: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dyson: Optional[str] = Field(nullable=True, default=None, max_length=20)
+
+#     numdot: Optional[int] = Field(nullable=True, default=None)
+#     agedot: Optional[int] = Field(nullable=True, default=None)
+#     predot: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     ageddot: Optional[int] = Field(nullable=True, default=None)
+#     cosdot: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     lildot: Optional[str] = Field(nullable=True, default=None, max_length=20)
+#     dydot: Optional[str] = Field(nullable=True, default=None, max_length=20)
+
+
+    status = Column(Enum(StatusChoices,  create_constraint=True), default=StatusChoices.PENDING, nullable=False)
+
+    created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
 
     def __repr__(self):
         return f"<Proposal id({self.id}) user_id({self.user_id}) proposal_no({self.propno})"
 
-class NomineeAttachment(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    nominee_id: int = Field(nullable=False, foreign_key="proposernominee.id")
-    nominee_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee_signature: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    nominee: "ProposerNominee" = Relationship(back_populates="nominee_attachments")
 
 
-class ProposerNominee(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    proposal_id: Optional[int] = Field(nullable=False, foreign_key="proposal.id")
-    attachment_id: Optional[int] = Field(nullable=False, foreign_key="nomineeattachment.id")
-    nomname: str = Field(nullable=False, min_length=3, max_length=30)
-    nomrel: int = Field(nullable=False, le=1, ge=30)
-    nfhname: str = Field(nullable=False, min_length=3, max_length=30)
-    nmhname: str = Field(nullable=False, min_length=3, max_length=30)
-    nspname: str = Field(nullable=False, min_length=3, max_length=30)
-    nid: str = Field(nullable=False, min_length=9, max_length=17)
-    ndob: date = Field(nullable=False)
-    nage: int = Field(nullable=False, le=150, ge=1)
-    nsex: str = Field(nullable=False, min_length=1, max_length=1)
-    nmobile: str = Field(
-        nullable=False,
-        min_length=11,
-        max_length=11,
-        regex="^017|016|013|018|019|[0-9]{8}$",
-    )
-    nemail: Optional[str] = Field(
-        nullable=True,
-        min_length=3,
-        max_length=30,
-        regex=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
-    )
-    noccup: str = Field(nullable=False, min_length=3, max_length=30)
-    presentaddr: str = Field(nullable=False, min_length=3, max_length=80)
-    nompurmaddr: str = Field(nullable=False, min_length=3, max_length=80)
-    nompar: float = Field(nullable=False, le=1, ge=100)
-    parenname: Optional[str] = Field(nullable=True, min_length=3, max_length=30)
-    chnomage: Optional[int] = Field(nullable=True, le=1, ge=100)
-    chnomrel: Optional[int] = Field(nullable=True, le=1, ge=30)
-    proposal: "Proposal" = Relationship(back_populates="nominees")
-    nominee_attachments: List["NomineeAttachment"] = Relationship(back_populates="nominee")
+class ProposerAttachments(Base): # type: ignore
+    __tablename__ = "proposer_attachments"
+    __table_args__ = {'schema': 'jibon'}
+    
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
+    proposer_id = Column(ForeignKey("jibon.proposals.id", ondelete="CASCADE"), nullable=False)
+    proposer_img = Column(VARCHAR2(65), nullable=True, default=None)
+    proposer_nid = Column(VARCHAR2(65), nullable=True, default=None)
+    proposer_birthid = Column(VARCHAR2(65), nullable=True, default=None)
+    proposer_signature = Column(VARCHAR2(65), nullable=True, default=None)
+    proposer = relationship("Proposals", back_populates="owner_attachments", passive_deletes=True)
+
+    created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
+
+    def __repr__(self):
+        return f"<ProposerAttachments id({self.id}) proposer_id({self.proposer_id})"
 
 
+class Nominee(Base): # type: ignore
+    __tablename__ = "nominees"
+    __table_args__ = {'schema': 'jibon'}
 
-class ProposerAttachments(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    proposal_id: int = Field(nullable=False, foreign_key="proposal.id")
-    proposer_img: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    proposer_nid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    proposer_birthid: Optional[str] = Field(nullable=True, default=None, max_length=65)
-    proposer_signature: Optional[str] = Field(
-        nullable=True, default=None, max_length=65
-    )
-    proposal: "Proposal" = Relationship(back_populates="attachments")
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
+    proposer_id = Column(ForeignKey("jibon.proposals.id", ondelete="CASCADE"), nullable=False)
+    nomname = Column(VARCHAR2(50), nullable=False)
+    nomrel = Column(NUMBER(3), nullable=False) # validation required for this field 
+
+    proposal = relationship("Proposal", back_populates="nominees", passive_deletes=True)
+    nominee_attachment = relationship("NomineeAttachment", back_populates="nominee", passive_deletes=True)
+    nfhname = Column(VARCHAR2(50), nullable=False, default=None)
+    nmhname = Column(VARCHAR2(50), nullable=False, default=None)
+    nspname= Column(VARCHAR2(50), nullable=True, default=None)
+    nid = Column(VARCHAR2(17), nullable=False)
+    ndob = Column(DATE(timezone=False), nullable=False)
+    nage = Column(NUMBER(3), nullable=False)
+    nsex = Column(VARCHAR2(1), nullable=False)
+    nmobile = Column(VARCHAR2(11), nullable=False)
+    nemail = Column(VARCHAR2(50), nullable=True, default=None)
+    noccup = Column(NUMBER(3), nullable=False) # TODO: Validation required for this field
+    presentaddr = Column(VARCHAR2(50), nullable=False)
+    nompurmaddr = Column(VARCHAR2(50), nullable=False)
+    nompar = Column(NUMBER(2, 2), nullable=False)
+    parenname = Column(VARCHAR2(30), nullable=True, default=None)
+    chnomage = Column(NUMBER(3), nullable=True, default=None)
+    chnomrel = Column(NUMBER(3), nullable=True, default=None)
+
+    created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
+
+    def __repr__(self):
+        return f"<Nominee id({self.id}) proposer_id({self.proposer_id})"
 
 
+class NomineeAttachment(Base): # type: ignore
+    __tablename__ = "nominee_attachments"
+    __table_args__ = {'schema': 'jibon'}
+
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
+    nominee_id = Column(ForeignKey("jibon.nominees.id", ondelete="CASCADE"), nullable=False)
+    nominee_img = Column(VARCHAR2(65), nullable=True, default=None)
+    nominee_nid = Column(VARCHAR2(65), nullable=True, default=None)
+    nominee_birthid = Column(VARCHAR2(65), nullable=True, default=None)
+    nominee_signature = Column(VARCHAR2(65), nullable=True, default=None)
+    nominee = relationship("Nominee", back_populates="nominee_attachment", passive_deletes=True)
+
+    created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
+
+    def __repr__(self):
+        return f"<NomineeAttachment id({self.id}) nominee_id({self.nominee_id})>"
+
+
+# Add Constraints to the tables
+
+CheckConstraint(func.regexp_like(User.email, Validator.EMAIL_STRING_VALIDATOR), name="email_regex")
+CheckConstraint(func.regexp_like(User.username, Validator.USERNAME_STRING_VALIDATOR), name="username_regex")
+CheckConstraint(func.regexp_like(User.mobile, Validator.MOBILE_NO_STRING_VALIDATOR), name="user_mobile_regex")
+CheckConstraint(func.regexp_like(User.full_name, Validator.NAME_STRING_VALIDATOR), name="full_name_regex")
+CheckConstraint(func.regexp_like(Proposal.mobile, Validator.MOBILE_NO_STRING_VALIDATOR), name="mobile_regex")
+CheckConstraint(func.regexp_like(Proposal.nid, Validator.NID_STRING_VALIDATOR), name="nid_regex")
+CheckConstraint(func.regexp_like(Nominee.nmobile, Validator.MOBILE_NO_STRING_VALIDATOR), name="nmobile_regex")
+CheckConstraint(func.regexp_like(Nominee.nid, Validator.NID_STRING_VALIDATOR), name="nomnid_regex")
+CheckConstraint(func.regexp_like(Nominee.nemail, Validator.EMAIL_STRING_VALIDATOR), name="nemail_regex")

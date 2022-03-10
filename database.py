@@ -1,4 +1,8 @@
-from sqlmodel import create_engine, Session
+# from sqlmodel import create_engine, Session
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 DIALECT = "oracle"
 SQL_DRIVER = "cx_oracle"
@@ -19,3 +23,9 @@ ENGINE_PATH_WIN_AUTH = (
 
 
 engine = create_engine(ENGINE_PATH_WIN_AUTH, echo=True)
+
+SessionLocal = sessionmaker(bind=engine)
+
+Base = declarative_base()
+
+# engine = create_engine(ENGINE_PATH_WIN_AUTH, echo=True)
