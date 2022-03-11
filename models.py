@@ -24,7 +24,18 @@ class PayMode(Base): # type: ignore
     pmode = Column(VARCHAR2(2), nullable=False, primary_key=True)
     modename = Column(VARCHAR2(25), nullable=False)
 
-class Plan: # type: ignore
+
+class Occupation(Base): # type: ignore
+    __tablename__ = 'occup'
+    __table_args__ = {'schema' : 'ipl'}
+    occup = Column(CHAR(2), nullable=False, primary_key=True)
+    occupname = Column(VARCHAR2(20), nullable=False)
+    occupctg = Column(CHAR(1), nullable=True)
+    pdab = Column(NUMBER(6,2), nullable=True)
+    adb = Column(NUMBER(6,2), nullable=True)
+    extra = Column(NUMBER(6,2), nullable=True)
+
+class Plan(Base): # type: ignore
     __tablename__ = 'plan'
     __table_args__ = {'schema' : 'ipl'}
     plan = Column(VARCHAR2(4), nullable=False, primary_key=True)
@@ -61,7 +72,7 @@ class User(Base): # type: ignore
     emp_code = Column(VARCHAR2(10), nullable=True) #TODO: Validation Required for Employee Code
     agent_code = Column(VARCHAR2(12), nullable=True) # TODO: Validation Required for valid agent code
 
-    proposals = relationship('Proposal', back_populates='owner')
+    all_proposals = relationship('Proposal', back_populates='owner')
 
     created_at = Column(DATE(timezone=True), nullable=False,server_default=func.sysdate())
 
@@ -77,7 +88,7 @@ class Proposal(Base): # type: ignore
     owner_id = Column(ForeignKey("jibon.users.id"), nullable=False)
     propno = Column(VARCHAR2(30), nullable=False, unique=True)
 
-    owner = relationship('User', back_populates='proposals')
+    owner = relationship('User', back_populates='all_proposals')
     owner_attachments = relationship('ProposerAttachments', back_populates='proposer')
     policy = Column(VARCHAR2(12), nullable=True, default=None)
     name = Column(VARCHAR2(50), nullable=False)
@@ -110,7 +121,8 @@ class Proposal(Base): # type: ignore
     maritial_status = Column(VARCHAR2(1), nullable=False)
     # edcode = Column(String(2), nullable=False)
     edcode = Column(CHAR(2), ForeignKey('ipl.education.edcode'))
-    occup = Column(VARCHAR2(2), nullable=False)     # TODO : Validation Required for Occupation
+    # occup = Column(VARCHAR2(2), nullable=False)     # TODO : Validation Required for Occupation
+    occup = Column(CHAR(2), ForeignKey('ipl.occup.occup'))
     ur = Column(VARCHAR2(1), nullable=False)
     propdat = Column(DATE(timezone=False), nullable=False)
     comdat = Column(DATE(timezone=False), nullable=False)
@@ -124,8 +136,8 @@ class Proposal(Base): # type: ignore
     dob_place = Column(VARCHAR2(30), nullable=False)
     polopt = Column(VARCHAR2(1), nullable=False)
     planname = Column(VARCHAR2(50), nullable=False)
-    # plan = Column(VARCHAR2(4), ForeignKey('ipl.plan.plan')) # TODO : Validation required for this field
-    plan = Column(VARCHAR2(4), nullable=False)
+    plan_code = Column(VARCHAR2(4), ForeignKey('ipl.plan.plan')) # TODO : Validation required for this field
+    # plan = Column(VARCHAR2(4), nullable=False)
     term = Column(VARCHAR2(2), nullable=False)
     sumass = Column(NUMBER(30,2), nullable=False)
     sumatrisk = Column(NUMBER(30,2), nullable=False)
@@ -135,8 +147,8 @@ class Proposal(Base): # type: ignore
     apc = Column(NUMBER(30,2), nullable=True, default=None)
     hi = Column(NUMBER(1), nullable=False, server_default='0')
     hiplan = Column(NUMBER(4), nullable=True)
-    # paymode = Column(VARCHAR2(2), ForeignKey('ipl.payment.pmode'))
-    paymode = Column(VARCHAR2(2), nullable=False)
+    paymode = Column(VARCHAR2(2), ForeignKey('ipl.paymode.pmode'))
+    # paymode = Column(VARCHAR2(2), nullable=False)
     lprem = Column(NUMBER(30,2), nullable=True, default=None)
     totprem = Column(NUMBER(30,2), nullable=False)
 
