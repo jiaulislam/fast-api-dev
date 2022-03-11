@@ -180,78 +180,82 @@ class Proposal(Base): # type: ignore
     o_pdab = Column(NUMBER(30, 2), nullable=True, default=None)
     o_adb = Column(NUMBER(30, 2), nullable=True, default=None)
     o_hi = Column(NUMBER(30,2), nullable=True, default=None)
-#     baaccno: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     acctype: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     babran: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     baadd: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     o_basic: Optional[float] = Field(nullable=True, default=None)
-#     o_pdab: Optional[float] = Field(nullable=True, default=None)
-#     o_adb: Optional[float] = Field(nullable=True, default=None)
-#     o_hi: Optional[int] = Field(nullable=True, default=None)
 
-#     numfh: Optional[int] = Field(nullable=True, default=None)
-#     agefh: Optional[int] = Field(nullable=True, default=None)
-#     prefh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedfh: Optional[int] = Field(nullable=True, default=None)
-#     cosfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dyfh: Optional[str] = Field(nullable=True, default=None, max_length=20)
+    family_history = relationship('FamilyHistory', back_populates='proposal_family_history', uselist=False)
 
-#     nummh: Optional[int] = Field(nullable=True, default=None)
-#     agemh: Optional[int] = Field(nullable=True, default=None)
-#     premh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedmh: Optional[int] = Field(nullable=True, default=None)
-#     cosmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilmh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dymh: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-#     numbro: Optional[int] = Field(nullable=True, default=None)
-#     agebro: Optional[int] = Field(nullable=True, default=None)
-#     prebro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedbro: Optional[int] = Field(nullable=True, default=None)
-#     cosbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilbro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dybro: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-#     numsis: Optional[int] = Field(nullable=True, default=None)
-#     agesis: Optional[int] = Field(nullable=True, default=None)
-#     presis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedsis: Optional[int] = Field(nullable=True, default=None)
-#     cossis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilsis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dysis: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-#     numsp: Optional[int] = Field(nullable=True, default=None)
-#     agesp: Optional[int] = Field(nullable=True, default=None)
-#     presp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedsp: Optional[int] = Field(nullable=True, default=None)
-#     cossp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilsp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dysp: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-#     numson: Optional[int] = Field(nullable=True, default=None)
-#     ageson: Optional[int] = Field(nullable=True, default=None)
-#     preson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     agedson: Optional[int] = Field(nullable=True, default=None)
-#     cosson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lilson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dyson: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-#     numdot: Optional[int] = Field(nullable=True, default=None)
-#     agedot: Optional[int] = Field(nullable=True, default=None)
-#     predot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     ageddot: Optional[int] = Field(nullable=True, default=None)
-#     cosdot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     lildot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-#     dydot: Optional[str] = Field(nullable=True, default=None, max_length=20)
-
-
+    
     status = Column(Enum(StatusChoices,  create_constraint=True), default=StatusChoices.PENDING, nullable=False)
 
     created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
 
     def __repr__(self):
         return f"<Proposal id({self.id}) user_id({self.user_id}) proposal_no({self.propno})"
+
+
+
+class FamilyHistory(Base): # type: ignore
+    __tablename__ = 'proposal_family_history'
+    __table_args__ = {'schema': 'jibon'}
+    id = Column(NUMBER(30), primary_key=True, server_defaut=Identity())
+    proposer_id = Column(NUMBER(30), ForeignKey('jibon.proposals.id'), nullable=False)
+
+    numfh = Column(NUMBER(1), nullable=True, default=None)
+    agefh = Column(NUMBER(3), nullable=True, default=None)
+    prefh = Column(VARCHAR2(10), nullable=True, default=None)
+    agedfh = Column(NUMBER(3), nullable=True, default=None)
+    cosfh = Column(VARCHAR2(30), nullable=True, default=None)
+    lilfh = Column(VARCHAR2(30), nullable=True, default=None)
+    dyfh = Column(VARCHAR2(30), nullable=True, default=None)
+
+
+    nummh = Column(NUMBER(1), nullable=True, default=None)
+    agemh = Column(NUMBER(3), nullable=True, default=None)
+    premh = Column(VARCHAR2(10), nullable=True, default=None)
+    agedmh = Column(NUMBER(3), nullable=True, default=None)
+    cosmh = Column(VARCHAR2(30), nullable=True, default=None)
+    lilmh = Column(VARCHAR2(30), nullable=True, default=None)
+    dymh = Column(VARCHAR2(30), nullable=True, default=None)
+
+    numbro = Column(NUMBER(1), nullable=True, default=None)
+    agebro = Column(NUMBER(3), nullable=True, default=None)
+    prebro = Column(VARCHAR2(10), nullable=True, default=None)
+    agedbro = Column(NUMBER(3), nullable=True, default=None)
+    cosbro = Column(VARCHAR2(30), nullable=True, default=None)
+    lilbro = Column(VARCHAR2(30), nullable=True, default=None)
+    dybro = Column(VARCHAR2(30), nullable=True, default=None)
+
+    numsis = Column(NUMBER(1), nullable=True, default=None)
+    agesis = Column(NUMBER(3), nullable=True, default=None)
+    presis = Column(VARCHAR2(10), nullable=True, default=None)
+    agedsis = Column(NUMBER(3), nullable=True, default=None)
+    cossis = Column(VARCHAR2(30), nullable=True, default=None)
+    lilsis = Column(VARCHAR2(30), nullable=True, default=None)
+    dysis = Column(VARCHAR2(30), nullable=True, default=None)
+
+
+    numsp = Column(NUMBER(1), nullable=True, default=None)
+    agesp = Column(NUMBER(3), nullable=True, default=None)
+    presp = Column(VARCHAR2(10), nullable=True, default=None)
+    agedsp = Column(NUMBER(3), nullable=True, default=None)
+    cossp = Column(VARCHAR2(30), nullable=True, default=None)
+    lilsp = Column(VARCHAR2(30), nullable=True, default=None)
+    dysp = Column(VARCHAR2(30), nullable=True, default=None)
+
+    numson = Column(NUMBER(1), nullable=True, default=None)
+    ageson = Column(NUMBER(3), nullable=True, default=None)
+    preson = Column(VARCHAR2(10), nullable=True, default=None)
+    agedson = Column(NUMBER(3), nullable=True, default=None)
+    cosson = Column(VARCHAR2(30), nullable=True, default=None)
+    lilson = Column(VARCHAR2(30), nullable=True, default=None)
+    dyson = Column(VARCHAR2(30), nullable=True, default=None)
+
+    numdot = Column(NUMBER(1), nullable=True, default=None)
+    agedot = Column(NUMBER(3), nullable=True, default=None)
+    predot = Column(VARCHAR2(10), nullable=True, default=None)
+    ageddot = Column(NUMBER(3), nullable=True, default=None)
+    cosdot = Column(VARCHAR2(30), nullable=True, default=None)
+    lildot = Column(VARCHAR2(30), nullable=True, default=None)
+    dydot = Column(VARCHAR2(30), nullable=True, default=None)
 
 
 
