@@ -5,15 +5,18 @@ from pydantic import BaseModel
 from models import Proposal
 
 
-class User(BaseModel):
-    id: int
+class UserCreate(BaseModel):
+    id: Optional[int]
     username: str
     full_name: str
+    password: str
     mobile: Optional[str]
     email: Optional[str]
     is_active: bool
     is_admin: bool
     is_agent: bool
+    emp_code: Optional[str]
+    agent_code : Optional[str]
 
 
 class LoginSchema(BaseModel):
@@ -32,10 +35,10 @@ class UserOut(BaseModel):
     mobile: Optional[str]
     email: Optional[str]
 
+    class Config:
+        orm_mode = True
 
-class UserProposalSchemaOut(BaseModel):
-    proposal: Proposal
-    user: UserOut
+
 
 class Token(BaseModel):
     access_token: str

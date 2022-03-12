@@ -72,7 +72,7 @@ class User(Base): # type: ignore
     emp_code = Column(VARCHAR2(10), nullable=True) #TODO: Validation Required for Employee Code
     agent_code = Column(VARCHAR2(12), nullable=True) # TODO: Validation Required for valid agent code
 
-    all_proposals = relationship('Proposal', back_populates='owner')
+    all_proposals = relationship('Proposal')
 
     created_at = Column(DATE(timezone=True), nullable=False,server_default=func.sysdate())
 
@@ -88,7 +88,8 @@ class Proposal(Base): # type: ignore
     owner_id = Column(ForeignKey("jibon.users.id"), nullable=False)
     propno = Column(VARCHAR2(30), nullable=False, unique=True)
 
-    owner = relationship('User', back_populates='all_proposals')
+    # owner = relationship('User', back_populates='proposals')
+    nominees = relationship('Nominee')
     owner_attachments = relationship('ProposerAttachments', back_populates='proposer')
     policy = Column(VARCHAR2(12), nullable=True, default=None)
     name = Column(VARCHAR2(50), nullable=False)
@@ -196,8 +197,9 @@ class Proposal(Base): # type: ignore
 class FamilyHistory(Base): # type: ignore
     __tablename__ = 'proposal_family_history'
     __table_args__ = {'schema': 'jibon'}
-    id = Column(NUMBER(30), primary_key=True, server_defaut=Identity())
+    id = Column(NUMBER(30), primary_key=True, server_default=Identity())
     proposer_id = Column(NUMBER(30), ForeignKey('jibon.proposals.id'), nullable=False)
+    proposal_family_history = relationship('Proposal', back_populates='family_history')
 
     numfh = Column(NUMBER(1), nullable=True, default=None)
     agefh = Column(NUMBER(3), nullable=True, default=None)
@@ -269,7 +271,7 @@ class ProposerAttachments(Base): # type: ignore
     proposer_nid = Column(VARCHAR2(65), nullable=True, default=None)
     proposer_birthid = Column(VARCHAR2(65), nullable=True, default=None)
     proposer_signature = Column(VARCHAR2(65), nullable=True, default=None)
-    proposer = relationship("Proposals", back_populates="owner_attachments", passive_deletes=True)
+    proposer = relationship("Proposal", back_populates="owner_attachments", passive_deletes=True)
 
     created_at = Column(DATE(timezone=True), nullable=False, server_default=func.sysdate())
 

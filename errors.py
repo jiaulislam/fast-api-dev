@@ -1,5 +1,7 @@
 USER_NOT_FOUND = "Requested User Not Found"
-INVALID_CREDENTIALS = "Username or Password Invalid"
+INVALID_CREDENTIALS = "Invalid Username or Password"
 RECORD_NOT_FOUND = "Record(s) not found in database"
 INVALID_REQUEST_BODY = "Invalid Parameters"
 USER_ALREADY_EXISTS = "Username Already Exists"
+MOBILE_ALREADY_EXISTS = "An account with this mobile number already exists"
+EMAIL_ALREADY_EXISTS = "An account with this email already exists"
