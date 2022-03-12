@@ -2,9 +2,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from models import Proposal
-
-
 class UserCreate(BaseModel):
     id: Optional[int]
     username: str
