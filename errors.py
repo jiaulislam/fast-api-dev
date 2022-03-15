@@ -5,3 +5,8 @@ INVALID_REQUEST_BODY = "Invalid Parameters"
 USER_ALREADY_EXISTS = "Username Already Exists"
 MOBILE_ALREADY_EXISTS = "An account with this mobile number already exists"
 EMAIL_ALREADY_EXISTS = "An account with this email already exists"
+VALIDATION_ERROR = "Invalid or Expired api key"
+MULTIPLE_RESULT_FOUND = "Multiple Results found when should be unique"
+DATA_VALIDATION_FAILED = "Requested data not found as per requirement"
+
+NOT_AUTHORIZED = "You are not authorized to do the action"

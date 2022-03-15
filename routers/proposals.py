@@ -6,8 +6,7 @@ from typing import List
 import errors
 
 from models import Proposal
-from models import Users
-
+from models import User
 
 
 router = APIRouter(
@@ -57,7 +56,7 @@ async def create_proposal(proposal: Proposal):
 async def get_proposals_by_user(user_id: int):
     with Session(engine) as session:
         statement = select(Proposal).where(Proposal.user_id == user_id)
-        user_state = select(Users).where(Users.id == user_id)
+        user_state = select(User).where(User.id == user_id)
         user = session.exec(user_state).one()
         print(user)
         proposals = session.exec(statement).all()
